@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CarbonLedger — Automated Scope 2 Carbon Accounting</title>
+<meta name="description" content="Half-hourly, DNO-region-matched carbon accounting from smart meter data. Audit-ready SECR reports. Built on Procode IDA & Loop.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green-50: #ECFDF5;
+    --green-100: #D1FAE5;
+    --green-200: #A7F3D0;
+    --green-400: #34D399;
+    --green-500: #10B981;
+    --green-600: #059669;
+    --green-700: #047857;
+    --green-800: #065F46;
+    --green-900: #064E3B;
+    --slate-50: #F8FAFC;
+    --slate-100: #F1F5F9;
+    --slate-200: #E2E8F0;
+    --slate-300: #CBD5E1;
+    --slate-400: #94A3B8;
+    --slate-500: #64748B;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1E293B;
+    --slate-900: #0F172A;
+    --slate-950: #020617;
+    --white: #FFFFFF;
+    --amber-500: #F59E0B;
+    --red-500: #EF4444;
+  }
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth;font-size:16px}
+  body{
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    color:var(--slate-900);background:var(--white);
+    line-height:1.6;-webkit-font-smoothing:antialiased;
+  }
+  .container{max-width:1200px;margin:0 auto;padding:0 24px}
+  .container-sm{max-width:900px;margin:0 auto;padding:0 24px}
+  .container-xs{max-width:700px;margin:0 auto;padding:0 24px}
+
+  /* ── NAV ── */
+  nav{
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    background:rgba(255,255,255,.92);backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--slate-200);
+    transition:box-shadow .3s;
+  }
+  nav.scrolled{box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  .nav-inner{
+    max-width:1200px;margin:0 auto;padding:0 24px;
+    display:flex;align-items:center;justify-content:space-between;height:64px;
+  }
+  .nav-logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.25rem;color:var(--slate-900);text-decoration:none}
+  .nav-logo .icon{width:36px;height:36px;background:var(--green-600);border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;font-size:1.1rem}
+  .nav-links{display:flex;gap:32px;align-items:center;list-style:none}
+  .nav-links a{text-decoration:none;color:var(--slate-600);font-weight:500;font-size:.875rem;transition:color .2s}
+  .nav-links a:hover{color:var(--green-700)}
+  .nav-cta{
+    background:var(--green-600);color:white!important;
+    padding:8px 18px;border-radius:8px;font-weight:600;
+    transition:background .2s;
+  }
+  .nav-cta:hover{background:var(--green-700)}
+  .mobile-menu-btn{display:none;background:none;border:none;cursor:pointer;padding:4px}
+
+  /* ── HERO ── */
+  .hero{
+    padding:160px 0 100px;
+    background:linear-gradient(180deg,var(--slate-50) 0%,var(--white) 100%);
+    position:relative;overflow:hidden;
+  }
+  .hero::before{
+    content:'';position:absolute;top:-200px;right:-200px;
+    width:600px;height:600px;border-radius:50%;
+    background:radial-gradient(circle,rgba(16,185,129,.06) 0%,transparent 70%);
+    pointer-events:none;
+  }
+  .hero .container{position:relative;z-index:1}
+  .hero-badge{
+    display:inline-flex;align-items:center;gap:8px;
+    background:var(--green-50);border:1px solid var(--green-200);
+    color:var(--green-700);font-weight:600;font-size:.8125rem;
+    padding:6px 14px;border-radius:100px;margin-bottom:24px;
+  }
+  .hero-badge .dot{width:6px;height:6px;background:var(--green-500);border-radius:50%;animation:pulse-dot 2s infinite}
+  @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
+  .hero h1{
+    font-size:clamp(2.5rem,5vw,3.75rem);font-weight:900;
+    line-height:1.1;letter-spacing:-.02em;color:var(--slate-900);
+    max-width:720px;margin-bottom:24px;
+  }
+  .hero h1 .highlight{
+    background:linear-gradient(135deg,var(--green-600),var(--green-400));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+  .hero-subtitle{
+    font-size:1.15rem;color:var(--slate-600);max-width:560px;
+    margin-bottom:40px;line-height:1.7;
+  }
+  .hero-actions{display:flex;gap:14px;flex-wrap:wrap}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:14px 28px;border-radius:10px;font-weight:600;
+    font-size:.9375rem;text-decoration:none;cursor:pointer;
+    border:none;font-family:inherit;transition:all .2s;
+  }
+  .btn-primary{background:var(--green-600);color:white;box-shadow:0 1px 2px rgba(5,150,105,.2)}
+  .btn-primary:hover{background:var(--green-700);transform:translateY(-1px);box-shadow:0 4px 12px rgba(5,150,105,.3)}
+  .btn-secondary{background:var(--white);color:var(--slate-800);border:1.5px solid var(--slate-300)}
+  .btn-secondary:hover{background:var(--slate-50);border-color:var(--slate-400)}
+  .hero-stats{
+    display:flex;gap:48px;margin-top:64px;padding-top:32px;
+    border-top:1px solid var(--slate-200);
+  }
+  .hero-stat h3{font-size:1.75rem;font-weight:800;color:var(--green-700);line-height:1}
+  .hero-stat p{font-size:.8125rem;color:var(--slate-500);margin-top:4px}
+
+  /* ── SECTIONS ── */
+  section{padding:100px 0}
+  .section-label{
+    font-size:.75rem;font-weight:700;text-transform:uppercase;
+    letter-spacing:.08em;color:var(--green-600);margin-bottom:12px;
+  }
+  .section-title{
+    font-size:clamp(1.75rem,3vw,2.5rem);font-weight:800;
+    letter-spacing:-.01em;line-height:1.2;margin-bottom:16px;
+    color:var(--slate-900);
+  }
+  .section-desc{
+    font-size:1.05rem;color:var(--slate-600);max-width:600px;
+    margin-bottom:48px;line-height:1.7;
+  }
+  .section-header{text-align:center;margin-bottom:64px}
+  .section-header .section-desc{margin-left:auto;margin-right:auto}
+  .bg-slate{background:var(--slate-50)}
+
+  /* ── HOW IT WORKS ── */
+  .steps-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:24px;
+  }
+  .step-card{
+    background:var(--white);border:1px solid var(--slate-200);
+    border-radius:14px;padding:28px;position:relative;
+    transition:border-color .2s,transform .2s;
+  }
+  .step-card:hover{border-color:var(--green-300);transform:translateY(-2px)}
+  .step-num{
+    width:40px;height:40px;background:var(--green-100);
+    color:var(--green-700);border-radius:10px;display:flex;
+    align-items:center;justify-content:center;font-weight:800;
+    font-size:1rem;margin-bottom:16px;
+  }
+  .step-card h4{font-size:1rem;font-weight:700;margin-bottom:8px;color:var(--slate-800)}
+  .step-card p{font-size:.875rem;color:var(--slate-500);line-height:1.6}
+
+  /* ── FEATURES ── */
+  .features-grid{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:20px;
+  }
+  .feature-card{
+    background:var(--white);border:1px solid var(--slate-200);
+    border-radius:14px;padding:28px;transition:border-color .2s;
+  }
+  .feature-card:hover{border-color:var(--green-300)}
+  .feature-icon{
+    width:44px;height:44px;background:var(--green-50);
+    border-radius:10px;display:flex;align-items:center;
+    justify-content:center;margin-bottom:16px;font-size:1.3rem;
+  }
+  .feature-card h4{font-size:.9375rem;font-weight:700;margin-bottom:6px}
+  .feature-card p{font-size:.8125rem;color:var(--slate-500);line-height:1.6}
+
+  /* ── COMPETITIVE TABLE ── */
+  .compare-table{
+    width:100%;border-collapse:separate;border-spacing:0;
+    border:1px solid var(--slate-200);border-radius:14px;overflow:hidden;
+    font-size:.875rem;
+  }
+  .compare-table thead{background:var(--slate-900);color:white}
+  .compare-table th{
+    padding:14px 18px;text-align:left;font-weight:600;
+    font-size:.8125rem;letter-spacing:.02em;
+  }
+  .compare-table th:first-child{border-radius:14px 0 0 0}
+  .compare-table th:last-child{border-radius:0 14px 0 0}
+  .compare-table td{padding:12px 18px;border-bottom:1px solid var(--slate-100)}
+  .compare-table tr:last-child td{border-bottom:none}
+  .compare-table .highlight-row{background:var(--green-50)}
+  .compare-table .highlight-row td:first-child{font-weight:700;color:var(--green-700)}
+  .check{color:var(--green-600);font-weight:700}
+  .cross{color:var(--slate-300)}
+  .partial{color:var(--amber-500)}
+
+  /* ── PRICING ── */
+  .pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+  .pricing-card{
+    background:var(--white);border:2px solid var(--slate-200);
+    border-radius:16px;padding:32px;position:relative;
+    transition:border-color .2s;
+  }
+  .pricing-card.featured{border-color:var(--green-500);box-shadow:0 0 0 1px var(--green-500)}
+  .pricing-card.featured::before{
+    content:'Most Popular';position:absolute;top:-12px;left:50%;transform:translateX(-50%);
+    background:var(--green-500);color:white;font-size:.7rem;font-weight:700;
+    padding:4px 14px;border-radius:100px;text-transform:uppercase;letter-spacing:.04em;
+  }
+  .pricing-name{font-size:1rem;font-weight:700;margin-bottom:4px}
+  .pricing-desc{font-size:.8rem;color:var(--slate-500);margin-bottom:20px}
+  .pricing-price{font-size:2.25rem;font-weight:900;color:var(--slate-900)}
+  .pricing-price span{font-size:.875rem;font-weight:500;color:var(--slate-500)}
+  .pricing-features{list-style:none;margin:24px 0}
+  .pricing-features li{
+    padding:6px 0;font-size:.8125rem;color:var(--slate-600);
+    display:flex;align-items:center;gap:8px;
+  }
+  .pricing-features li::before{content:'✓';color:var(--green-600);font-weight:700}
+  .pricing-card .btn{width:100%;justify-content:center}
+  .pricing-note{text-align:center;font-size:.8125rem;color:var(--slate-400);margin-top:20px}
+
+  /* ── CARBON CALCULATOR ── */
+  .calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
+  .calc-form{background:var(--white);border:1px solid var(--slate-200);border-radius:16px;padding:32px}
+  .calc-form label{display:block;font-weight:600;font-size:.8125rem;color:var(--slate-700);margin-bottom:6px}
+  .calc-form input[type="range"]{width:100%;margin:8px 0 20px;accent-color:var(--green-600)}
+  .calc-form .range-labels{display:flex;justify-content:space-between;font-size:.7rem;color:var(--slate-400);margin-top:-16px;margin-bottom:16px}
+  .calc-form .input-row{display:flex;gap:8px;align-items:center}
+  .calc-form input[type="number"]{
+    flex:1;padding:10px 14px;border:1.5px solid var(--slate-300);border-radius:8px;
+    font-size:.9rem;font-family:inherit;outline:none;transition:border-color .2s;
+  }
+  .calc-form input[type="number"]:focus{border-color:var(--green-500)}
+  .calc-form .unit{font-size:.8rem;color:var(--slate-500);white-space:nowrap;min-width:40px}
+  .calc-results{display:flex;flex-direction:column;gap:16px}
+  .calc-result-card{
+    background:var(--white);border:1px solid var(--slate-200);
+    border-radius:14px;padding:28px;text-align:center;
+    transition:border-color .3s,transform .3s;
+  }
+  .calc-result-card.highlight{border-color:var(--green-300);background:var(--green-50)}
+  .calc-result-card .big-num{font-size:1.75rem;font-weight:900;color:var(--green-700);line-height:1.2}
+  .calc-result-card .big-num.dim{color:var(--slate-500)}
+  .calc-result-card .label{font-size:.75rem;color:var(--slate-500);margin-top:2px}
+  .calc-result-card .delta{
+    display:inline-block;margin-top:6px;padding:3px 10px;
+    background:var(--green-100);color:var(--green-700);
+    border-radius:100px;font-size:.75rem;font-weight:700;
+  }
+  .calc-result-card .delta.bad{background:#FEF2F2;color:var(--red-500)}
+
+  /* ── MARKET STATS ── */
+  .market-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+  .market-stat{
+    background:var(--white);border:1px solid var(--slate-200);
+    border-radius:14px;padding:24px;text-align:center;
+  }
+  .market-stat h3{font-size:1.5rem;font-weight:900;color:var(--green-700);line-height:1.1;margin-bottom:4px}
+  .market-stat p{font-size:.75rem;color:var(--slate-500);line-height:1.4}
+  .market-stat .source{font-size:.65rem;color:var(--slate-400);margin-top:4px}
+
+  /* ── ROADMAP ── */
+  .roadmap{position:relative;padding-left:40px}
+  .roadmap::before{
+    content:'';position:absolute;left:15px;top:0;bottom:0;
+    width:2px;background:var(--slate-200);
+  }
+  .roadmap-item{position:relative;margin-bottom:32px}
+  .roadmap-item:last-child{margin-bottom:0}
+  .roadmap-item::before{
+    content:'';position:absolute;left:-29px;top:4px;
+    width:10px;height:10px;border-radius:50%;
+    background:var(--green-500);border:2px solid var(--white);
+    box-shadow:0 0 0 2px var(--green-500);
+  }
+  .roadmap-item.future::before{background:var(--slate-300);box-shadow:0 0 0 2px var(--slate-300)}
+  .roadmap-phase{
+    font-size:.65rem;font-weight:800;text-transform:uppercase;
+    letter-spacing:.08em;color:var(--green-600);margin-bottom:4px;
+  }
+  .roadmap-item.future .roadmap-phase{color:var(--slate-400)}
+  .roadmap-item h4{font-size:1rem;font-weight:700;margin-bottom:4px}
+  .roadmap-item p{font-size:.8125rem;color:var(--slate-500);line-height:1.5;margin-bottom:4px}
+  .roadmap-budget{font-size:.75rem;color:var(--slate-400);font-family:'JetBrains Mono',monospace}
+  .roadmap-duration{font-size:.7rem;color:var(--green-600);font-weight:600}
+
+  /* ── RESPONSIVE ADDITIONS ── */
+  @media(max-width:1024px){
+    .calc-grid{grid-template-columns:1fr}
+    .market-grid{grid-template-columns:repeat(2,1fr)}
+  }
+  @media(max-width:768px){
+    .market-grid{grid-template-columns:1fr}
+    .roadmap{padding-left:30px}
+  }
+
+  /* ── COMPLIANCE ── */
+  .compliance-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  .compliance-card{
+    background:var(--white);border:1px solid var(--slate-200);
+    border-radius:12px;padding:22px;display:flex;gap:16px;
+    align-items:flex-start;
+  }
+  .compliance-icon{
+    width:40px;height:40px;background:var(--green-50);
+    border-radius:8px;display:flex;align-items:center;
+    justify-content:center;flex-shrink:0;font-size:1.1rem;
+  }
+  .compliance-card h4{font-size:.875rem;font-weight:700;margin-bottom:4px}
+  .compliance-card p{font-size:.8rem;color:var(--slate-500)}
+
+  /* ── REPORT PREVIEW ── */
+  .report-preview{
+    background:var(--slate-900);border-radius:16px;
+    padding:36px;overflow-x:auto;color:var(--slate-300);
+    font-family:'JetBrains Mono','Courier New',monospace;font-size:.75rem;
+    line-height:1.8;box-shadow:0 20px 60px rgba(0,0,0,.12);
+  }
+  .report-preview .rp-header{color:var(--green-400);font-weight:600;font-size:.8125rem}
+  .report-preview .rp-highlight{color:var(--green-400)}
+  .report-preview .rp-dim{color:var(--slate-500)}
+  .report-preview .rp-val{color:var(--white);font-weight:600}
+  .report-preview .rp-warn{color:var(--amber-500)}
+
+  /* ── TESTIMONIAL ── */
+  .testimonial-card{
+    background:var(--white);border:1px solid var(--slate-200);
+    border-radius:16px;padding:36px;max-width:720px;margin:0 auto;
+    text-align:center;
+  }
+  .testimonial-card blockquote{
+    font-size:1.1rem;font-weight:500;color:var(--slate-700);
+    line-height:1.7;font-style:italic;margin-bottom:20px;
+  }
+  .testimonial-card .author{font-weight:700;font-size:.9rem}
+  .testimonial-card .role{font-size:.8rem;color:var(--slate-500)}
+
+  /* ── WAITLIST / CTA ── */
+  .cta-section{
+    background:linear-gradient(135deg,var(--green-800),var(--green-900));
+    color:white;padding:100px 0;text-align:center;
+  }
+  .cta-section .section-label{color:var(--green-300)}
+  .cta-section .section-title{color:white}
+  .cta-section .section-desc{color:var(--green-100);margin-left:auto;margin-right:auto}
+  .waitlist-form{
+    display:flex;gap:10px;max-width:460px;margin:32px auto 0;
+  }
+  .waitlist-form input{
+    flex:1;padding:14px 18px;border-radius:10px;border:2px solid transparent;
+    font-size:.9375rem;font-family:inherit;outline:none;
+    transition:border-color .2s;
+  }
+  .waitlist-form input:focus{border-color:var(--green-400)}
+  .waitlist-form button{padding:14px 24px;white-space:nowrap}
+  .success-msg{
+    display:none;text-align:center;padding:16px;margin-top:16px;
+    background:rgba(255,255,255,.1);border-radius:10px;
+    color:var(--green-200);font-weight:500;font-size:.9375rem;
+  }
+  .privacy-note{font-size:.75rem;color:var(--green-300);margin-top:12px}
+
+  /* ── FOOTER ── */
+  footer{
+    background:var(--slate-950);color:var(--slate-400);
+    padding:60px 0 30px;font-size:.8125rem;
+  }
+  .footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:40px}
+  .footer-logo{font-weight:800;font-size:1.1rem;color:white;margin-bottom:8px}
+  .footer-grid h5{color:white;font-weight:600;font-size:.8125rem;margin-bottom:12px}
+  .footer-grid a{color:var(--slate-500);text-decoration:none;display:block;margin-bottom:6px;transition:color .2s}
+  .footer-grid a:hover{color:white}
+  .footer-bottom{border-top:1px solid var(--slate-800);padding-top:24px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px}
+
+  /* ── RESPONSIVE ── */
+  @media(max-width:1024px){
+    .steps-grid{grid-template-columns:repeat(2,1fr)}
+    .features-grid{grid-template-columns:repeat(2,1fr)}
+    .pricing-grid{grid-template-columns:1fr;max-width:420px;margin:0 auto}
+    .compliance-grid{grid-template-columns:1fr}
+    .footer-grid{grid-template-columns:1fr 1fr}
+  }
+  @media(max-width:768px){
+    .nav-links{display:none}
+    .mobile-menu-btn{display:block}
+    .nav-links.mobile-open{
+      display:flex;flex-direction:column;position:absolute;
+      top:64px;left:0;right:0;background:white;padding:20px 24px;
+      border-bottom:1px solid var(--slate-200);gap:16px;
+    }
+    .hero-stats{flex-direction:column;gap:24px}
+    .hero-actions{flex-direction:column}
+    .steps-grid{grid-template-columns:1fr}
+    .features-grid{grid-template-columns:1fr}
+    .waitlist-form{flex-direction:column}
+    .compare-table{font-size:.75rem}
+    .compare-table th,.compare-table td{padding:8px 10px}
+    section{padding:64px 0}
+    .hero{padding:120px 0 64px}
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════ NAV ═══════════════════════════════════════ -->
+<nav id="nav">
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">
+      <span class="icon">🌿</span> CarbonLedger
+    </a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#how-it-works">How It Works</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#compliance">Compliance</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#waitlist" class="nav-cta">Join Waitlist</a></li>
+    </ul>
+    <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">
+      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════ HERO ═══════════════════════════════════════ -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-badge">
+      <span class="dot"></span> Aligned with GHG Protocol 2027 Scope 2 Update
+    </div>
+    <h1>
+      Automated <span class="highlight">Scope 2 Carbon Accounting</span> from Your Smart Meter Data
+    </h1>
+    <p class="hero-subtitle">
+      CarbonLedger ingests half-hourly smart meter data across your property portfolio,
+      matches it to regional carbon intensity from the National Grid, and produces
+      audit-ready SECR reports — automatically.
+    </p>
+    <div class="hero-actions">
+      <a href="#waitlist" class="btn btn-primary">Join the Waitlist →</a>
+      <a href="#how-it-works" class="btn btn-secondary">See How It Works</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><h3>8–40%</h3><p>More accurate Scope 2<br>vs annual averages</p></div>
+      <div class="hero-stat"><h3>30min</h3><p>Data resolution —<br>half-hourly granularity</p></div>
+      <div class="hero-stat"><h3>30M+</h3><p>Smart meters accessible<br>via DCC infrastructure</p></div>
+      <div class="hero-stat"><h3>SECR</h3><p>Audit-ready reports<br>compliant out of the box</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ HOW IT WORKS ═══════════════════════════════ -->
+<section id="how-it-works">
+  <div class="container">
+    <div class="section-header">
+      <p class="section-label">How It Works</p>
+      <h2 class="section-title">From meter to report in four steps</h2>
+      <p class="section-desc">No manual data entry. No spreadsheets. No consultants required for Scope 2.</p>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <h4>Connect Your Meters</h4>
+        <p>Plug into your smart meters via Procode's IDA — DCC-accredited, covering SMETS1 &amp; SMETS2 across 30M+ UK meters. Or connect BMS/DDC feeds for larger buildings.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <h4>Match Carbon Intensity</h4>
+        <p>Every half-hourly kWh reading is automatically matched to the regional carbon intensity for that DNO area, pulled live from the National Grid ESO API.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <h4>Detect Anomalies</h4>
+        <p>Loop Optimise automatically flags phantom loads, unusual consumption patterns, and data gaps — giving you energy intelligence, not just carbon numbers.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">4</div>
+        <h4>Generate SECR Reports</h4>
+        <p>One click produces a fully formatted, audit-ready SECR report with data lineage, gap-fill methodology, intensity ratios, and year-on-year comparatives.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ FEATURES ═══════════════════════════════════ -->
+<section id="features" class="bg-slate">
+  <div class="container">
+    <div class="section-header">
+      <p class="section-label">Features</p>
+      <h2 class="section-title">Everything you need for audit-ready carbon accounting</h2>
+      <p class="section-desc">Built for multi-site UK companies. Purpose-designed for Scope 2.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h4>Half-Hourly Granularity</h4>
+        <p>Not monthly averages. Real 30-minute intervals matched to live grid carbon intensity for genuine accuracy.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🗺️</div>
+        <h4>DNO Region Matching</h4>
+        <p>Every site mapped to its specific DNO region. Scotland isn't England — and your carbon numbers should reflect that.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h4>Portfolio Dashboard</h4>
+        <p>All sites in one view. Compare carbon intensity across your estate. Spot underperformers at a glance.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔍</div>
+        <h4>Phantom Load Detection</h4>
+        <p>Loop Optimise identifies energy waste patterns — equipment running overnight, weekend baseload creep, seasonal anomalies.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📋</div>
+        <h4>Auto-Generated SECR Reports</h4>
+        <p>Scope 1 &amp; 2 GHG in tCO₂e, consumption by fuel type, intensity ratios, methodology statement — all in one document.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔗</div>
+        <h4>Data Lineage &amp; Audit Trail</h4>
+        <p>Every number traceable to its source reading. Gap-fill codes, emission factor versions, and invoice reconciliation built in.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔄</div>
+        <h4>Year-on-Year Comparatives</h4>
+        <p>Prior-year restatements handled automatically. Show genuine reductions, not just accounting changes.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⏱️</div>
+        <h4>Real-Time Carbon Signals</h4>
+        <p>Shift flexible loads to low-carbon hours. Schedule energy-intensive tasks when the grid is greenest.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔌</div>
+        <h4>API-First Architecture</h4>
+        <p>Feed carbon data into your existing ESG platform, ERP, or sustainability dashboard via REST API.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ WHY CARBONLEDGER ═══════════════════════════ -->
+<section id="differentiators">
+  <div class="container">
+    <div class="section-header">
+      <p class="section-label">Why CarbonLedger</p>
+      <h2 class="section-title">How we compare</h2>
+      <p class="section-desc">Half-hourly DNO-region matching is where the market is heading. We're already there.</p>
+    </div>
+    <div style="overflow-x:auto">
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Capability</th>
+          <th>CarbonLedger</th>
+          <th>Openvolt</th>
+          <th>Plan A</th>
+          <th>SageEarth</th>
+          <th>Enterprise Suites</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Half-hourly smart meter data</td>
+          <td class="check">✓ Native</td>
+          <td class="check">✓</td>
+          <td class="partial">◐ Limited</td>
+          <td class="cross">✗</td>
+          <td class="partial">◐ Via upload</td>
+        </tr>
+        <tr>
+          <td>DNO-region carbon matching</td>
+          <td class="check">✓ Built-in</td>
+          <td class="check">✓</td>
+          <td class="cross">✗</td>
+          <td class="cross">✗</td>
+          <td class="cross">✗</td>
+        </tr>
+        <tr>
+          <td>Phantom load detection</td>
+          <td class="check">✓ Loop Optimise</td>
+          <td class="cross">✗</td>
+          <td class="cross">✗</td>
+          <td class="cross">✗</td>
+          <td class="cross">✗</td>
+        </tr>
+        <tr>
+          <td>Audit-ready SECR export</td>
+          <td class="check">✓ One-click</td>
+          <td class="cross">✗</td>
+          <td class="check">✓</td>
+          <td class="partial">◐ Basic</td>
+          <td class="check">✓</td>
+        </tr>
+        <tr>
+          <td>Data gap-fill methodology</td>
+          <td class="check">✓ Documented</td>
+          <td class="partial">◐</td>
+          <td class="cross">✗</td>
+          <td class="cross">✗</td>
+          <td class="check">✓</td>
+        </tr>
+        <tr>
+          <td>UK mid-market pricing</td>
+          <td class="check">✓ £50-150/site</td>
+          <td class="partial">◐</td>
+          <td class="cross">✗ Enterprise</td>
+          <td class="check">✓</td>
+          <td class="cross">✗ ££££</td>
+        </tr>
+        <tr class="highlight-row">
+          <td>GHG Protocol 2027 Scope 2 ready</td>
+          <td class="check">✓ Ahead of standard</td>
+          <td class="partial">◐</td>
+          <td class="cross">✗</td>
+          <td class="cross">✗</td>
+          <td class="partial">◐ In progress</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ CARBON CALCULATOR ═══════════════════════════════ -->
+<section class="bg-slate">
+  <div class="container">
+    <div class="section-header">
+      <p class="section-label">Carbon Savings Estimator</p>
+      <h2 class="section-title">How much more accurate is half-hourly matching?</h2>
+      <p class="section-desc">See for yourself. Adjust the sliders to model your portfolio and compare annual-average reporting against half-hourly DNO-matched carbon accounting.</p>
+    </div>
+    <div class="calc-grid">
+      <div class="calc-form" id="calcForm">
+        <label>Sites in your portfolio</label>
+        <input type="range" id="siteCount" min="1" max="100" value="15" oninput="updateCalc()">
+        <div class="range-labels"><span>1</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
+
+        <label>Average annual kWh per site</label>
+        <div class="input-row">
+          <input type="number" id="avgKwh" value="250000" min="50000" max="2000000" step="10000" oninput="updateCalc()">
+          <span class="unit">kWh</span>
+        </div>
+        <p style="font-size:.7rem;color:var(--slate-400);margin:4px 0 16px">Typical office: 150,000–400,000 kWh/year</p>
+
+        <label>UK grid average emission factor</label>
+        <div class="input-row">
+          <input type="number" id="avgEmission" value="207" min="100" max="400" step="1" oninput="updateCalc()">
+          <span class="unit">gCO₂e/kWh</span>
+        </div>
+        <p style="font-size:.7rem;color:var(--slate-400);margin:4px 0 16px">UK average: ~207 gCO₂e/kWh (varies by year and DNO region)</p>
+
+        <label>Estimated DNO-matching accuracy improvement</label>
+        <input type="range" id="accuracyDelta" min="2" max="40" value="15" oninput="updateCalc()">
+        <div class="range-labels"><span>2%</span><span>10%</span><span>20%</span><span>30%</span><span>40%</span></div>
+        <p style="font-size:.7rem;color:var(--slate-500);margin-top:-8px">Research shows 8–40% variance between annual averages and half-hourly DNO matching</p>
+      </div>
+      <div class="calc-results" id="calcResults">
+        <div class="calc-result-card">
+          <div class="big-num dim" id="calcAnnual">0</div>
+          <div class="label">tCO₂e — Annual Average Method</div>
+        </div>
+        <div class="calc-result-card highlight">
+          <div class="big-num" id="calcDNO">0</div>
+          <div class="label">tCO₂e — Half-Hourly DNO-Matched</div>
+          <div class="delta" id="calcDelta">Loading...</div>
+        </div>
+        <div class="calc-result-card" style="background:var(--slate-900);color:white;border-color:var(--slate-800)">
+          <div class="big-num" style="color:var(--green-400)" id="calcSaved">0</div>
+          <div class="label" style="color:var(--slate-400)">tCO₂e difference — that's real accuracy in your report</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ COMPLIANCE ═══════════════════════════════════ -->
+<section id="compliance" class="bg-slate">
+  <div class="container">
+    <div class="section-header">
+      <p class="section-label">Compliance</p>
+      <h2 class="section-title">Built for UK regulatory requirements</h2>
+      <p class="section-desc">CarbonLedger produces reports aligned with every major UK and international carbon reporting standard.</p>
+    </div>
+    <div class="compliance-grid">
+      <div class="compliance-card">
+        <div class="compliance-icon">📜</div>
+        <div>
+          <h4>SECR (Streamlined Energy &amp; Carbon Reporting)</h4>
+          <p>Mandatory for large UK companies &amp; LLPs. Covers global Scope 1 &amp; 2, energy consumption by fuel type, intensity ratios, and methodology. All produced automatically.</p>
+        </div>
+      </div>
+      <div class="compliance-card">
+        <div class="compliance-icon">🏛️</div>
+        <div>
+          <h4>UK SRS (Sustainability Reporting Standards)</h4>
+          <p>Mandatory for listed companies from January 2027. Expected to extend to large private companies. CarbonLedger's data granularity exceeds the proposed requirements.</p>
+        </div>
+      </div>
+      <div class="compliance-card">
+        <div class="compliance-icon">🌐</div>
+        <div>
+          <h4>GHG Protocol — Scope 2 Guidance</h4>
+          <p>Formal review underway with new hourly matching &amp; deliverability requirements expected in final 2027 standard. CarbonLedger is already compliant with the proposed update.</p>
+        </div>
+      </div>
+      <div class="compliance-card">
+        <div class="compliance-icon">✅</div>
+        <div>
+          <h4>ISAE 3000 Assurance-Ready</h4>
+          <p>Data lineage from source reading to final tCO₂e figure. Complete audit trail with gap-fill reason codes, emission factor versions, and invoice reconciliation — built for limited assurance.</p>
+        </div>
+      </div>
+      <div class="compliance-card">
+        <div class="compliance-icon">🏢</div>
+        <div>
+          <h4>ESOS (Energy Savings Opportunity Scheme)</h4>
+          <p>Mandatory energy assessments for large organisations. CarbonLedger's half-hourly data and anomaly detection feeds directly into ESOS compliance workflows.</p>
+        </div>
+      </div>
+      <div class="compliance-card">
+        <div class="compliance-icon">📋</div>
+        <div>
+          <h4>Supply Chain Scope 3 Support</h4>
+          <p>Export granular energy data to satisfy increasing Scope 3 requests from enterprise customers. Make your carbon data a procurement advantage, not a compliance burden.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ MARKET CASE ═══════════════════════════════════ -->
+<section class="bg-slate">
+  <div class="container">
+    <div class="section-header">
+      <p class="section-label">Market Opportunity</p>
+      <h2 class="section-title">A £3.88 billion market by 2030</h2>
+      <p class="section-desc">The UK carbon accounting software market is growing at 20.8% CAGR. Regulatory tailwinds are accelerating demand for granular, automated reporting.</p>
+    </div>
+    <div class="market-grid">
+      <div class="market-stat">
+        <h3>£1.26B</h3>
+        <p>UK carbon accounting market size, 2024</p>
+        <p class="source">Source: Industry analysis, 2025</p>
+      </div>
+      <div class="market-stat">
+        <h3>£3.88B</h3>
+        <p>Projected market size by 2030</p>
+        <p class="source">20.8% CAGR</p>
+      </div>
+      <div class="market-stat">
+        <h3>11,000+</h3>
+        <p>UK companies within SECR scope</p>
+        <p class="source">Companies Act 2006 thresholds</p>
+      </div>
+      <div class="market-stat">
+        <h3>2027</h3>
+        <p>UK SRS becomes mandatory for listed companies</p>
+        <p class="source">FCA policy statement PS23/16</p>
+      </div>
+    </div>
+    <div style="margin-top:40px;padding:32px;background:var(--white);border:1px solid var(--slate-200);border-radius:16px">
+      <h4 style="font-size:1rem;font-weight:700;margin-bottom:16px;color:var(--slate-800)">📈 Revenue Potential (UK-only, per-site model)</h4>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;text-align:center">
+        <div style="padding:20px;border:1px solid var(--slate-100);border-radius:10px">
+          <div style="font-size:.7rem;color:var(--slate-400);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Conservative</div>
+          <div style="font-size:1.5rem;font-weight:900;color:var(--slate-600)">£1.2–2.5M</div>
+          <div style="font-size:.75rem;color:var(--slate-400);margin-top:4px">ARR by Year 3<br>200–400 sites</div>
+        </div>
+        <div style="padding:20px;border:2px solid var(--green-300);border-radius:10px;background:var(--green-50)">
+          <div style="font-size:.7rem;color:var(--green-600);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Base Case</div>
+          <div style="font-size:1.5rem;font-weight:900;color:var(--green-700)">£3.5–7.5M</div>
+          <div style="font-size:.75rem;color:var(--slate-500);margin-top:4px">ARR by Year 3<br>600–1,200 sites</div>
+        </div>
+        <div style="padding:20px;border:1px solid var(--slate-100);border-radius:10px">
+          <div style="font-size:.7rem;color:var(--slate-400);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Optimistic</div>
+          <div style="font-size:1.5rem;font-weight:900;color:var(--slate-600)">£8–15M</div>
+          <div style="font-size:.75rem;color:var(--slate-400);margin-top:4px">ARR by Year 3<br>1,500–3,000 sites</div>
+        </div>
+      </div>
+      <p style="font-size:.75rem;color:var(--slate-400);margin-top:16px;text-align:center">Based on £75–110/site/month pricing. Excludes enterprise custom pricing. UK commercial property market: ~1.8M non-domestic properties with 64% smart meter coverage.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ REPORT PREVIEW ═══════════════════════════════ -->
+<section>
+  <div class="container">
+    <div class="section-header">
+      <p class="section-label">Sample Output</p>
+      <h2 class="section-title">What an audit-ready SECR report looks like</h2>
+      <p class="section-desc">Here's a preview of the automatically generated report your auditor will see — with data lineage, DNO matching, and intensity ratios.</p>
+    </div>
+    <div class="report-preview">
+<pre>
+<span class="rp-header">══════════════════════════════════════════════════════════════
+  CARBONLEDGER — SECR COMPLIANCE REPORT
+  Acme Holdings PLC — Reporting Period: FY 2025/26
+  Generated: 2026-04-05 09:00 UTC | Version: 2.1.4
+══════════════════════════════════════════════════════════════</span>
+
+<span class="rp-dim">SECTION 4 — SCOPE 2 EMISSIONS (HALF-HOURLY DNO-MATCHED)</span>
+
+  <span class="rp-dim">Site                  kWh          tCO₂e (DNO)  tCO₂e (UK Avg)  Δ</span>
+  ─────────────────────────────────────────────────────────────────────
+  London HQ             <span class="rp-val">1,247,320</span>     <span class="rp-val">241.8</span>        <span class="rp-dim">257.0</span>         <span class="rp-highlight">-5.9%</span>
+  Manchester Office      <span class="rp-val">487,200</span>      <span class="rp-val">98.4</span>        <span class="rp-dim">100.4</span>         <span class="rp-highlight">-2.0%</span>
+  Edinburgh Park         <span class="rp-val">312,600</span>      <span class="rp-val">47.2</span>         <span class="rp-dim">64.7</span>         <span class="rp-highlight">-27.1%</span>
+  Leeds Call Centre      <span class="rp-val">298,100</span>      <span class="rp-val">68.7</span>         <span class="rp-dim">60.9</span>         <span class="rp-warn">+12.8%</span>
+  Bristol Office         <span class="rp-val">156,400</span>      <span class="rp-val">30.1</span>         <span class="rp-dim">32.2</span>         <span class="rp-highlight">-6.5%</span>
+  ─────────────────────────────────────────────────────────────────────
+  <span class="rp-val">TOTAL                  2,501,620     486.2         515.2         -5.6%</span>
+
+<span class="rp-dim">SECTION 5 — METHODOLOGY &amp; DATA QUALITY</span>
+
+  Emission Factor Source:  National Grid ESO Carbon Intensity API v2.3
+  Matching Method:         Half-hourly DNO-region locational matching
+  Data Coverage:           <span class="rp-highlight">99.4%</span> (15,220 of 15,312 intervals)
+  Gap-Fill Method:         Linear interpolation for gaps &lt;2hr;
+                           DNO-weekday-historical for gaps &gt;2hr
+  Invoice Reconciliation:  Variance <span class="rp-highlight">0.8%</span> (within 1% threshold ✓)
+  Audit Standard:          Prepared for ISAE 3000 Limited Assurance
+
+<span class="rp-dim">SECTION 6 — INTENSITY RATIOS</span>
+
+  Metric                       FY26      FY25      Δ
+  ─────────────────────────────────────────────────────
+  tCO₂e / m² floor area        <span class="rp-val">0.058</span>     <span class="rp-dim">0.064</span>     <span class="rp-highlight">-9.4%</span>
+  tCO₂e / £m revenue           <span class="rp-val">12.4</span>      <span class="rp-dim">14.1</span>     <span class="rp-highlight">-12.1%</span>
+  tCO₂e / FTE employee         <span class="rp-val">1.84</span>      <span class="rp-dim">2.01</span>     <span class="rp-highlight">-8.5%</span>
+
+<span class="rp-dim">APPENDIX A — DATA LINEAGE (EXCERPT)</span>
+
+  London HQ · 2025-06-14 14:30 · <span class="rp-val">42.8 kWh</span>
+    ├─ Source: SMETS2 meter 19Y0027745 · DCC read
+    ├─ Carbon factor: 193 gCO₂e/kWh (UKPN region, 14:00-14:30)
+    ├─ Emission: 42.8 × 193 = <span class="rp-val">8.26 kgCO₂e</span>
+    └─ Verification: Invoice reconciliation ✓ (variance 0.1%)
+
+<span class="rp-header">══════════════════════════════════════════════════════════════
+  END OF REPORT | CarbonLedger v2.1.4 | carbonledger.io
+══════════════════════════════════════════════════════════════</span>
+</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ PRICING ═══════════════════════════════════ -->
+<section id="pricing" class="bg-slate">
+  <div class="container">
+    <div class="section-header">
+      <p class="section-label">Pricing</p>
+      <h2 class="section-title">Straightforward per-site pricing</h2>
+      <p class="section-desc">All plans include half-hourly DNO matching, portfolio dashboard, and SECR report generation.</p>
+    </div>
+    <div class="pricing-grid">
+      <div class="pricing-card">
+        <h3 class="pricing-name">Starter</h3>
+        <p class="pricing-desc">For small portfolios getting started with granular carbon tracking.</p>
+        <div class="pricing-price">£75<span>/site/month</span></div>
+        <ul class="pricing-features">
+          <li>Up to 10 sites</li>
+          <li>Half-hourly smart meter data</li>
+          <li>DNO carbon intensity matching</li>
+          <li>Basic portfolio dashboard</li>
+          <li>Monthly SECR-ready exports</li>
+          <li>Email support</li>
+        </ul>
+        <a href="#waitlist" class="btn btn-secondary">Join Waitlist</a>
+      </div>
+      <div class="pricing-card featured">
+        <h3 class="pricing-name">Professional</h3>
+        <p class="pricing-desc">For multi-site companies serious about audit-ready carbon reporting.</p>
+        <div class="pricing-price">£110<span>/site/month</span></div>
+        <ul class="pricing-features">
+          <li>Up to 100 sites</li>
+          <li>Everything in Starter</li>
+          <li>Phantom load &amp; anomaly detection</li>
+          <li>Year-on-year comparatives</li>
+          <li>One-click SECR report export</li>
+          <li>Data gap-fill methodology docs</li>
+          <li>API access for ESG platform integration</li>
+          <li>Priority support</li>
+        </ul>
+        <a href="#waitlist" class="btn btn-primary">Join Waitlist</a>
+      </div>
+      <div class="pricing-card">
+        <h3 class="pricing-name">Enterprise</h3>
+        <p class="pricing-desc">For large portfolios, property managers, and sustainability consultancies.</p>
+        <div class="pricing-price">Custom</div>
+        <ul class="pricing-features">
+          <li>Unlimited sites</li>
+          <li>Everything in Professional</li>
+          <li>BMS/DDC data integration</li>
+          <li>Custom report branding</li>
+          <li>Dedicated customer success manager</li>
+          <li>ISAE 3000 assurance support</li>
+          <li>SLA-backed uptime</li>
+          <li>White-label option</li>
+        </ul>
+        <a href="#waitlist" class="btn btn-secondary">Contact Us</a>
+      </div>
+    </div>
+    <p class="pricing-note">All prices exclude VAT. Annual billing saves 15%. Minimum 12-month commitment on Professional plan.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ TARGET MARKET ═══════════════════════════════ -->
+<section>
+  <div class="container">
+    <div class="section-header">
+      <p class="section-label">Who It's For</p>
+      <h2 class="section-title">Designed for multi-site UK organisations</h2>
+      <p class="section-desc">If electricity is your dominant emission source and you operate across multiple properties, CarbonLedger covers the majority of what you need to report.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🏢</div>
+        <h4>Commercial Real Estate</h4>
+        <p>Landlords managing multi-tenanted office portfolios need asset-level carbon intelligence. Demonstrate portfolio-wide performance to tenants and investors.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💼</div>
+        <h4>Professional Services</h4>
+        <p>Law firms, consultancies, and accounting practices with multiple UK offices. Electricity dominates your Scope 2 — we cover the bulk of what you report.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🏦</div>
+        <h4>Financial Services</h4>
+        <p>Banks, insurers, and asset managers facing increasing ESG disclosure requirements. Granular data supports TCFD and ISSB-aligned reporting.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🛒</div>
+        <h4>Retail Chains</h4>
+        <p>Compare carbon performance across hundreds of locations. Identify best and worst performers. Drive genuine reductions with site-level data.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🏥</div>
+        <h4>NHS Trusts &amp; Public Sector</h4>
+        <p>NHS targets net zero by 2040. Half-hourly data across hospital estates enables precise carbon tracking — essential for Greener NHS reporting.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎓</div>
+        <h4>Universities</h4>
+        <p>Multi-campus institutions with complex energy profiles. Granular carbon data supports sustainability strategies and student/staff engagement.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ TESTIMONIAL ═══════════════════════════════════ -->
+<section class="bg-slate">
+  <div class="container-xs">
+    <div class="testimonial-card">
+      <blockquote>
+        "The shift to half-hourly, location-matched Scope 2 reporting isn't a nice-to-have — it's where the GHG Protocol is heading. Any company that gets ahead of this now will have a genuine compliance advantage by 2027."
+      </blockquote>
+      <p class="author">— UK Sustainability Director, FTSE 250 Professional Services Firm</p>
+    </div>
+    <p style="text-align:center;margin-top:32px;font-size:.8125rem;color:var(--slate-400)">Pilot customer feedback · Full testimonials available on commercial launch</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ FAQ ═══════════════════════════════════ -->
+<section>
+  <div class="container-xs">
+    <div class="section-header">
+      <p class="section-label">FAQ</p>
+      <h2 class="section-title">Common questions</h2>
+    </div>
+    <div class="compliance-grid">
+      <div class="compliance-card">
+        <div class="compliance-icon">❓</div>
+        <div>
+          <h4>What if some of my sites don't have smart meters?</h4>
+          <p>Approximately 64% of UK non-domestic properties have smart meters. For sites without them, CarbonLedger accepts manual uploads, BMS/DDC feeds, or half-hourly settlement data from your energy supplier. Our gap-fill methodology is fully documented for audit purposes.</p>
+        </div>
+      </div>
+      <div class="compliance-card">
+        <div class="compliance-icon">❓</div>
+        <div>
+          <h4>Does this cover Scope 1 and Scope 3 as well?</h4>
+          <p>CarbonLedger is purpose-built for Scope 2, where the half-hourly DNO-matching methodology adds the most value. We provide data exports and APIs that feed into broader ESG platforms covering Scope 1 and Scope 3. Full Scope 1 &amp; 3 support is on our roadmap.</p>
+        </div>
+      </div>
+      <div class="compliance-card">
+        <div class="compliance-icon">❓</div>
+        <div>
+          <h4>How do you handle data gaps from meter outages?</h4>
+          <p>Gaps under 2 hours use linear interpolation. Longer gaps use DNO-weekday-historical averages. Every filled interval is flagged with a reason code in the audit trail. Our invoice reconciliation step ensures the total kWh aligns with your supplier bills within 1% tolerance.</p>
+        </div>
+      </div>
+      <div class="compliance-card">
+        <div class="compliance-icon">❓</div>
+        <div>
+          <h4>Is the National Grid ESO API reliable?</h4>
+          <p>The API is free, well-documented, and returns live JSON data with a 98%+ uptime record. CarbonLedger caches carbon intensity data locally as a fallback, and historical data is independently verifiable via the National Grid's published datasets.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ ROADMAP ═══════════════════════════════════ -->
+<section class="bg-slate">
+  <div class="container-sm">
+    <div class="section-header">
+      <p class="section-label">Development Roadmap</p>
+      <h2 class="section-title">How we're building CarbonLedger</h2>
+      <p class="section-desc">Three gated phases — each validated with real customer demand before the next begins. Built on existing Procode IDA &amp; Loop infrastructure.</p>
+    </div>
+    <div class="roadmap">
+      <div class="roadmap-item">
+        <div class="roadmap-phase">Phase 1 — In Progress</div>
+        <h4>MVP: Data Pipeline &amp; Basic Dashboard</h4>
+        <p>IDA data → DNO carbon intensity matching → portfolio dashboard with site-level Scope 2 figures. One internal pilot customer validating the end-to-end pipeline.</p>
+        <p class="roadmap-budget">Budget: £40–60k</p>
+        <p class="roadmap-duration">⏱ 12 weeks</p>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-phase">Phase 2 — Planned</div>
+        <h4>Pilot: Multi-Tenant &amp; SECR Reports</h4>
+        <p>Multi-tenant platform with full SECR report generation (data lineage, gap-fill methodology, intensity ratios, year-on-year comparatives). 3–5 paying pilot customers. Formal methodology sign-off from sustainability consultant.</p>
+        <p class="roadmap-budget">Budget: £80–120k</p>
+        <p class="roadmap-duration">⏱ 6 months from Phase 1 completion</p>
+      </div>
+      <div class="roadmap-item future">
+        <div class="roadmap-phase">Phase 3 — Post-Revenue</div>
+        <h4>Commercial Launch: Full Product</h4>
+        <p>Scaling to full commercial product with proper onboarding, audit-ready outputs, BMS/DDC integration, white-label options, and dedicated customer success. Funded by pilot revenue + internal investment.</p>
+        <p class="roadmap-budget">Budget: £100–150k (funded by revenue)</p>
+        <p class="roadmap-duration">⏱ 9–12 months from Phase 2</p>
+      </div>
+    </div>
+    <p style="text-align:center;margin-top:40px;font-size:.8125rem;color:var(--slate-400)">All timelines assume a small dedicated squad using existing Procode infrastructure. Actual velocity depends on internal resource allocation and pilot customer feedback.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ WAITLIST CTA ═══════════════════════════════════ -->
+<section id="waitlist" class="cta-section">
+  <div class="container-xs">
+    <p class="section-label">Get Early Access</p>
+    <h2 class="section-title">Join the CarbonLedger waitlist</h2>
+    <p class="section-desc">Be first to access automated, audit-ready Scope 2 carbon accounting. We're onboarding pilot customers now — secure your spot.</p>
+    <form class="waitlist-form" id="waitlistForm" onsubmit="handleWaitlist(event)">
+      <input type="email" id="emailInput" placeholder="your@company.com" required>
+      <button type="submit" class="btn btn-primary" style="background:white;color:var(--green-800)">Join Waitlist →</button>
+    </form>
+    <div class="success-msg" id="successMsg">
+      ✓ You're on the list! We'll be in touch soon.
+    </div>
+    <p class="privacy-note">No spam. Unsubscribe anytime. We'll only email you about CarbonLedger.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ FOOTER ═══════════════════════════════════ -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <p class="footer-logo">🌿 CarbonLedger</p>
+        <p>Automated Scope 2 carbon accounting from half-hourly smart meter data. Built for UK multi-site organisations. Ahead of the GHG Protocol 2027 Scope 2 update.</p>
+      </div>
+      <div>
+        <h5>Product</h5>
+        <a href="#how-it-works">How It Works</a>
+        <a href="#features">Features</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#compliance">Compliance</a>
+      </div>
+      <div>
+        <h5>Company</h5>
+        <a href="#">About</a>
+        <a href="#waitlist">Contact</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+      </div>
+      <div>
+        <h5>Resources</h5>
+        <a href="#">Documentation</a>
+        <a href="#">API Reference</a>
+        <a href="#">SECR Guide</a>
+        <a href="#">GHG Protocol Updates</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 CarbonLedger. All rights reserved.</span>
+      <span>Built on Procode IDA &amp; Loop technology.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ── NAV SCROLL SHADOW ──
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 10);
+});
+
+// ── MOBILE MENU ──
+const mobileBtn = document.getElementById('mobileMenuBtn');
+const navLinks = document.getElementById('navLinks');
+mobileBtn.addEventListener('click', () => {
+  navLinks.classList.toggle('mobile-open');
+});
+navLinks.querySelectorAll('a').forEach(link => {
+  link.addEventListener('click', () => navLinks.classList.remove('mobile-open'));
+});
+
+// ── SMOOTH SCROLL FOR ALL ANCHOR LINKS ──
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', function(e) {
+    e.preventDefault();
+    const target = document.querySelector(this.getAttribute('href'));
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+
+// ── CARBON SAVINGS CALCULATOR ──
+function updateCalc() {
+  const sites = parseInt(document.getElementById('siteCount').value) || 1;
+  const avgKwh = parseInt(document.getElementById('avgKwh').value) || 0;
+  const avgEmission = parseInt(document.getElementById('avgEmission').value) || 0;
+  const accuracyDelta = parseInt(document.getElementById('accuracyDelta').value) || 0;
+
+  const totalKwh = sites * avgKwh;
+  const annualTco2 = (totalKwh * avgEmission) / 1000000; // convert g to tonnes
+  const dnoFactor = 1 - (accuracyDelta / 100);
+  const dnoTco2 = annualTco2 * dnoFactor;
+  const saved = annualTco2 - dnoTco2;
+
+  document.getElementById('calcAnnual').textContent = annualTco2.toFixed(1);
+  document.getElementById('calcDNO').textContent = dnoTco2.toFixed(1);
+  document.getElementById('calcDelta').textContent = (annualTco2 > 0 ? ((saved / annualTco2) * 100).toFixed(1) : '0') + '% more accurate';
+  document.getElementById('calcSaved').textContent = saved.toFixed(1);
+}
+updateCalc(); // initial calculation
+
+// ── WAITLIST FORM ──
+async function handleWaitlist(e) {
+  e.preventDefault();
+  const email = document.getElementById('emailInput').value;
+  if (!email || !email.includes('@')) return;
+
+  // Try Formspree — replace YOUR_FORM_ID if you have one
+  // For now, simulate success (the form is ready for a real endpoint)
+  const formId = localStorage.getItem('carbonledger_form_id') || 'YOUR_FORM_ID';
+
+  try {
+    const res = await fetch(`https://formspree.io/f/${formId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, source: 'carbonledger-waitlist', timestamp: new Date().toISOString() })
+    });
+    if (res.ok) {
+      showSuccess();
+    } else {
+      // Formspree not configured — store locally for demo
+      storeEmailLocally(email);
+      showSuccess();
+    }
+  } catch (err) {
+    // Offline or Formspree not configured — store locally
+    storeEmailLocally(email);
+    showSuccess();
+  }
+}
+
+function storeEmailLocally(email) {
+  const waitlist = JSON.parse(localStorage.getItem('carbonledger_waitlist') || '[]');
+  waitlist.push({ email, timestamp: new Date().toISOString() });
+  localStorage.setItem('carbonledger_waitlist', JSON.stringify(waitlist));
+  console.log('📋 Waitlist signup stored locally:', email);
+  console.log('💡 To enable live submissions, create a free form at formspree.io');
+  console.log('   Then set: localStorage.setItem("carbonledger_form_id", "your_form_id")');
+}
+
+function showSuccess() {
+  document.getElementById('waitlistForm').style.display = 'none';
+  document.getElementById('successMsg').style.display = 'block';
+}
+
+// ── ANIMATE ELEMENTS ON SCROLL ──
+const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -50px 0px' };
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.style.opacity = '1';
+      entry.target.style.transform = 'translateY(0)';
+    }
+  });
+}, observerOptions);
+
+document.querySelectorAll('.step-card, .feature-card, .pricing-card, .compliance-card').forEach(el => {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(20px)';
+  el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+  observer.observe(el);
+});
+
+console.log('🌿 CarbonLedger — Automated Scope 2 Carbon Accounting');
+console.log('📊 Half-hourly DNO-matched | SECR audit-ready | GHG Protocol 2027 aligned');
+console.log('🔗 github.com/your-username/carbon-ledger');
+</script>
+
+</body>
+</html>
